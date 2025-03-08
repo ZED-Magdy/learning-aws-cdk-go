@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
+
 	// "github.com/aws/aws-cdk-go/awscdk/v2/awssqs"
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
@@ -24,6 +26,12 @@ func NewHelloCdkGoStack(scope constructs.Construct, id string, props *HelloCdkGo
 	// queue := awssqs.NewQueue(stack, jsii.String("HelloCdkGoQueue"), &awssqs.QueueProps{
 	// 	VisibilityTimeout: awscdk.Duration_Seconds(jsii.Number(300)),
 	// })
+
+	awslambda.NewFunction(stack, jsii.String("HelloCdkGoFunction"), &awslambda.FunctionProps{
+		Runtime: awslambda.Runtime_PROVIDED_AL2023(),
+		Handler: jsii.String("main"),
+		Code: awslambda.Code_FromAsset(jsii.String("lambda/function.zip"), nil),
+	})
 
 	return stack
 }
