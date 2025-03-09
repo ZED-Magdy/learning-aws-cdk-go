@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awsapigateway"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsdynamodb"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
 	"github.com/aws/constructs-go/constructs/v10"
@@ -35,11 +36,23 @@ func NewHelloCdkGoStack(scope constructs.Construct, id string, props *HelloCdkGo
 		},
 	})
 
-	fn.AddFunctionUrl(&awslambda.FunctionUrlOptions{
-		AuthType: awslambda.FunctionUrlAuthType_NONE,
+	table.GrantReadWriteData(fn)
+
+	api := awsapigateway.NewLambdaRestApi(stack, jsii.String("HelloCdkGoApi"), &awsapigateway.LambdaRestApiProps{
+		Handler:     fn,
+		Description: jsii.String("API Gateway for Hello CDK Go Lambda"),
+		DeployOptions: &awsapigateway.StageOptions{
+			StageName: jsii.String("prod"),
+		},
 	})
 
-	table.GrantReadWriteData(fn)
+	contactResource := api.Root().AddResource(jsii.String("contact"), nil)
+	contactResource.AddMethod(jsii.String("POST"), nil, nil)
+
+	awscdk.NewCfnOutput(stack, jsii.String("ApiEndpoint"), &awscdk.CfnOutputProps{
+		Value:       api.Url(),
+		Description: jsii.String("URL of the API Gateway"),
+	})
 
 	return stack
 }

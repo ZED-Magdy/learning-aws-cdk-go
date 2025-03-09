@@ -11,6 +11,19 @@ import (
 )
 
 func handler(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	// Route handling based on path
+	switch req.Path {
+	case "/contact":
+		return contactHandler(req)
+	default:
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusNotFound,
+			Body:       "Route not found",
+		}, nil
+	}
+}
+
+func contactHandler(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	var body map[string]string
 	if err := json.Unmarshal([]byte(req.Body), &body); err != nil {
 		return events.APIGatewayProxyResponse{
