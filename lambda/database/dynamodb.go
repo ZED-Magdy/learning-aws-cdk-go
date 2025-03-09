@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -15,17 +16,24 @@ type DynamoDBClient struct {
 	table  string
 }
 
+// Update the struct tags to explicitly map to DynamoDB attributes
 type Item struct {
-	Name    string `json:"name"`
-	Message string `json:"message"`
+	Name    string `json:"name" dynamodbav:"name"`
+	Message string `json:"message" dynamodbav:"message"`
 }
 
-const tableName = "HelloCdkGoTable"
+// Default table name if environment variable is not set
+const defaultTableName = "HelloCdkGoTable"
 
 func NewDynamoDBClient() (*DynamoDBClient, error) {
 	cfg, err := config.LoadDefaultConfig(context.Background())
-	if err != nil {
+	if (err != nil) {
 		return nil, err
+	}
+
+	tableName := os.Getenv("TABLE_NAME")
+	if tableName == "" {
+		tableName = defaultTableName
 	}
 
 	return &DynamoDBClient{
@@ -35,9 +43,14 @@ func NewDynamoDBClient() (*DynamoDBClient, error) {
 }
 
 func (d *DynamoDBClient) PutItem(item Item) error {
-	av, err := attributevalue.MarshalMap(item)
-	if err != nil {
-		return err
+	av := make(map[string]types.AttributeValue, 2)
+	
+	if _, ok := av["name"]; !ok {
+		av["name"] = &types.AttributeValueMemberS{Value: item.Name}
+	}
+
+	if _, ok := av["message"]; !ok {
+		av["message"] = &types.AttributeValueMemberS{Value: item.Message}
 	}
 
 	input := &dynamodb.PutItemInput{
@@ -45,7 +58,7 @@ func (d *DynamoDBClient) PutItem(item Item) error {
 		Item:      av,
 	}
 
-	_, err = d.client.PutItem(context.Background(), input)
+	_, err := d.client.PutItem(context.Background(), input)
 	return err
 }
 
@@ -64,15 +77,10 @@ func (d *DynamoDBClient) GetItem(name string) (*Item, error) {
 		return nil, err
 	}
 
-	if result.Item == nil {
-		return nil, nil
-	}
-
-	var item Item
-	err = attributevalue.UnmarshalMap(result.Item, &item)
-	if err != nil {
+	item := new(Item)
+	if err := attributevalue.UnmarshalMap(result.Item, item); err != nil {
 		return nil, err
 	}
 
-	return &item, nil
+	return item, nil
 }
