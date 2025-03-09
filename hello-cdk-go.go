@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awsdynamodb"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
 
 	// "github.com/aws/aws-cdk-go/awscdk/v2/awssqs"
@@ -37,6 +38,15 @@ func NewHelloCdkGoStack(scope constructs.Construct, id string, props *HelloCdkGo
 	fn.AddFunctionUrl(&awslambda.FunctionUrlOptions{
 		AuthType: awslambda.FunctionUrlAuthType_NONE,
 	})
+
+	table := awsdynamodb.NewTable(stack, jsii.String("HelloCdkGoTable"), &awsdynamodb.TableProps{
+		PartitionKey: &awsdynamodb.Attribute{
+			Name: jsii.String("name"),
+			Type: awsdynamodb.AttributeType_STRING,
+		},
+	})
+
+	table.GrantReadWriteData(fn)
 
 	return stack
 }
