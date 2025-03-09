@@ -16,13 +16,11 @@ type DynamoDBClient struct {
 	table  string
 }
 
-// Update the struct tags to explicitly map to DynamoDB attributes
 type Item struct {
 	Name    string `json:"name" dynamodbav:"name"`
 	Message string `json:"message" dynamodbav:"message"`
 }
 
-// Default table name if environment variable is not set
 const defaultTableName = "HelloCdkGoTable"
 
 func NewDynamoDBClient() (*DynamoDBClient, error) {
