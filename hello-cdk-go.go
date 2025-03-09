@@ -27,10 +27,15 @@ func NewHelloCdkGoStack(scope constructs.Construct, id string, props *HelloCdkGo
 	// 	VisibilityTimeout: awscdk.Duration_Seconds(jsii.Number(300)),
 	// })
 
-	awslambda.NewFunction(stack, jsii.String("HelloCdkGoFunction"), &awslambda.FunctionProps{
+	fn := awslambda.NewFunction(stack, jsii.String("HelloCdkGoFunction"), &awslambda.FunctionProps{
 		Runtime: awslambda.Runtime_PROVIDED_AL2023(),
 		Handler: jsii.String("main"),
 		Code: awslambda.Code_FromAsset(jsii.String("lambda/function.zip"), nil),
+		
+	})
+
+	fn.AddFunctionUrl(&awslambda.FunctionUrlOptions{
+		AuthType: awslambda.FunctionUrlAuthType_NONE,
 	})
 
 	return stack
